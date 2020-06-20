@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>kubernetes on Heath Harrelson&#39;s Blog</title>
+    <link>https://heathharrelson.github.io/tags/kubernetes/</link>
+    <description>Heath Harrelson&#39;s Blog (kubernetes)</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 20 Jun 2020 05:21:38 +0000</lastBuildDate>
+    
+    <atom:link href="https://heathharrelson.github.io/tags/kubernetes/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Building a Raspberry Pi Kubernetes Cluster with Kubeadm</title>
+      <link>https://heathharrelson.github.io/posts/raspberry-pi-cluster-kubeadm/</link>
+      <pubDate>Sat, 20 Jun 2020 05:21:38 +0000</pubDate>
+      
+      <guid>https://heathharrelson.github.io/posts/raspberry-pi-cluster-kubeadm/</guid>
+      <description>&lt;p&gt;This article describes how to build a personal &lt;a href=&#34;https://kubernetes.io/&#34;&gt;Kubernetes&lt;/a&gt; cluster using &lt;a href=&#34;https://www.raspberrypi.org/&#34;&gt;Raspberry Pi&lt;/a&gt; single-board computers and &lt;a href=&#34;https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm/&#34;&gt;kubeadm&lt;/a&gt;.&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;materials&#34;&gt;Materials&lt;/h2&gt;
+&lt;h3 id=&#34;hardware&#34;&gt;Hardware&lt;/h3&gt;
+&lt;p&gt;I used the following hardware to build the cluster described below.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;3 Raspberry Pi 4 Model B (4 GB)&lt;/li&gt;
+&lt;li&gt;3 LoveRPi PoE hat for Raspberry Pi 4 Model B (compact)&lt;/li&gt;
+&lt;li&gt;TP-Link 8 port PoE gigabit switch&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;I previously built a cluster using Raspberry Pi 3 Model B+ computers. While this worked, the performance was underwhelming, and it didn&amp;rsquo;t leave many resources left for applications. If you have the option, the Raspberry Pi 4 is much more capable.&lt;/p&gt;
+&lt;p&gt;Using &lt;a href=&#34;https://en.wikipedia.org/wiki/Power_over_Ethernet&#34;&gt;power over Ethernet (PoE)&lt;/a&gt; is optional. You can use pretty much any Ethernet switch to build your cluster, but with PoE the result is much tidier.&lt;/p&gt;
+&lt;h3 id=&#34;software&#34;&gt;Software&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/hypriot/image-builder-rpi/releases/tag/v1.12.2&#34;&gt;Hypriot 1.12.2&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/kubernetes/kubernetes/releases/tag/v1.18.3&#34;&gt;Kubernetes 1.18.3&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/weaveworks/weave/releases/tag/latest_release&#34;&gt;Weave Net 2.6.5&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Using &lt;a href=&#34;https://blog.hypriot.com/downloads/&#34;&gt;Hypriot&lt;/a&gt; for the operating system saves installation time, because Docker is preinstalled. However, Hypriot is currently built for 32-bit armv7 architecture. The Raspberry Pi 3 and 4 can run 64-bit binaries, and plenty of the Docker containers available are only built for arm64. If that matters to you, you might want to choose a different OS.&lt;/p&gt;
+&lt;h3 id=&#34;networking&#34;&gt;Networking&lt;/h3&gt;
+&lt;p&gt;The Ethernet interfaces are used for cluster networking and have static IP addresses in the 10.1.1.0/24 range. WiFi interfaces are used for internet access and are configured using DHCP.&lt;/p&gt;
+&lt;h2 id=&#34;setup&#34;&gt;Setup&lt;/h2&gt;
+&lt;h3 id=&#34;hypriot-config&#34;&gt;Hypriot Config&lt;/h3&gt;
+&lt;p&gt;Hypriot allows configuring the disk images using &lt;a href=&#34;https://cloudinit.readthedocs.io/en/20.2/index.html&#34;&gt;cloud-init&lt;/a&gt;, which reduces the manual steps required to get the cluster up and makes setup much more repeatable.&lt;/p&gt;
+&lt;h4 id=&#34;user-data&#34;&gt;user-data&lt;/h4&gt;
+&lt;p&gt;Following &lt;a href=&#34;https://github.com/hypriot/flash/tree/master/sample&#34;&gt;&lt;code&gt;user-data&lt;/code&gt; examples from the Hypriot GitHub repo&lt;/a&gt;, I created a &lt;a href=&#34;https://cloudinit.readthedocs.io/en/20.2/topics/examples.html#yaml-examples&#34;&gt;&lt;code&gt;user-data&lt;/code&gt; file&lt;/a&gt; for each host. See &lt;a href=&#34;https://gist.github.com/heathharrelson/ffde93b78d9a1ecd77a47e4f8c16d297&#34;&gt;this Gist&lt;/a&gt; for a full example.&lt;/p&gt;
+&lt;p&gt;This &lt;code&gt;user-data&lt;/code&gt; file:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;sets the hostname&lt;/li&gt;
+&lt;li&gt;changes the username from &lt;code&gt;pirate&lt;/code&gt; to &lt;code&gt;k8s&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;adds an authorized SSH key&lt;/li&gt;
+&lt;li&gt;adds a static &lt;code&gt;/etc/hosts&lt;/code&gt; file&lt;/li&gt;
+&lt;li&gt;configures the &lt;code&gt;wlan0&lt;/code&gt; and &lt;code&gt;eth0&lt;/code&gt; interfaces&lt;/li&gt;
+&lt;li&gt;sets up a workaround for issues with &lt;code&gt;iptables-nft&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;adds the Kubernetes Apt repo&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id=&#34;network-config&#34;&gt;network-config&lt;/h4&gt;
+&lt;p&gt;I modified &lt;code&gt;network-config&lt;/code&gt; to disable the default configuration, which enables DHCP on &lt;code&gt;eth0&lt;/code&gt;.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-yaml&#34; data-lang=&#34;yaml&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;version&lt;/span&gt;: &lt;span style=&#34;color:#ae81ff&#34;&gt;1&lt;/span&gt;
+&lt;span style=&#34;color:#66d9ef&#34;&gt;config&lt;/span&gt;: disabled
+  &lt;span style=&#34;color:#75715e&#34;&gt;# - type: physical&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;#   name: eth0&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;#   subnets:&lt;/span&gt;
+  &lt;span style=&#34;color:#75715e&#34;&gt;#     - type: dhcp&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;installation&#34;&gt;Installation&lt;/h2&gt;
+&lt;h3 id=&#34;flashing-the-disk-image&#34;&gt;Flashing the disk image&lt;/h3&gt;
+&lt;p&gt;Flash the disk image and cloud-init files onto SD cards with the &lt;a href=&#34;https://github.com/hypriot/flash&#34;&gt;Hypriot &lt;code&gt;flash&lt;/code&gt; tool&lt;/a&gt;.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ flash -d /dev/disk2 \
+  -u nodeX-user-data \
+  -F network-config \
+  hypriotos-rpi-v1.12.2.img
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;first-boot&#34;&gt;First boot&lt;/h3&gt;
+&lt;p&gt;Boot each node into Hypriot and let it resize the file system and apply &lt;code&gt;user-config&lt;/code&gt;. Once a console prompt is available, verify that &lt;code&gt;wlan0&lt;/code&gt; is up, then update and install dependencies.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ sudo apt-get update
+$ sudo apt-get upgrade -y
+$ sudo apt-get install -y kubectl kubeadm kubelet
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Restart.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ sudo init 6
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Verify that &lt;code&gt;wlan0&lt;/code&gt; and &lt;code&gt;eth0&lt;/code&gt; both came up. Verify that you can ping other nodes.&lt;/p&gt;
+&lt;h3 id=&#34;initialize-the-cluster-with-kubeadm&#34;&gt;Initialize the cluster with kubeadm&lt;/h3&gt;
+&lt;p&gt;Log into the master node and &lt;a href=&#34;https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/&#34;&gt;install Kubernetes with kubeadm according to the documentation&lt;/a&gt;. I configured the master to advertise the API server on the &lt;code&gt;eth0&lt;/code&gt; interface. Otherwise nothing custom.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ sudo kubeadm init --apiserver-advertise-address=10.1.1.1
+...
+Your Kubernetes control-plane has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+You should now deploy a pod network to the cluster.
+Run &amp;quot;kubectl apply -f [podnetwork].yaml&amp;quot; with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 10.1.1.1:6443 --token TOKEN_STRING \
+    --discovery-token-ca-cert-hash sha256:LONG_HASH_VALUE
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;After a few minutes, the control plane should be installed. Copy the &lt;code&gt;kubeadm join&lt;/code&gt; command from the output for use later.&lt;/p&gt;
+&lt;p&gt;Copy the Kubeconfig file to your home directory as shown in the output and verify &lt;code&gt;kubectl&lt;/code&gt; works with it.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ sudo cp /etc/kubernetes/admin.conf /home/k8s/.kube/config
+$ sudo chown k8s:k8s /home/k8s/.kube/config
+$ kubectl get nodes
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;install-the-overlay-network&#34;&gt;Install the overlay network&lt;/h3&gt;
+&lt;p&gt;Running &lt;code&gt;kubectl get nodes&lt;/code&gt; should show the cluster master node is in &lt;code&gt;NotReady&lt;/code&gt; state. To finish installation, install a pod overlay network. I used &lt;a href=&#34;https://github.com/weaveworks/weave&#34;&gt;Weave Net&lt;/a&gt;.&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;The Kubernetes documentation Documentation currently states that Calico is the only overlay network used for e2e testing, but the Calico image is not compiled for armv7.&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;Download and apply the Weave Net manifest to install the overlay network.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ curl -L -o weave.yaml https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d &#39;\n&#39;)
+$ kubectl apply -f weave.yaml
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Watch the overlay pods until they enter the &amp;ldquo;Running&amp;rdquo; state.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ watch kubectl -n kube-system get pods
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The master should now be ready.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ kubectl get nodes
+&lt;/code&gt;&lt;/pre&gt;&lt;h3 id=&#34;adding-worker-nodes&#34;&gt;Adding worker nodes&lt;/h3&gt;
+&lt;p&gt;On each worker node, run the &lt;code&gt;kubeadm join&lt;/code&gt; copied from &lt;code&gt;kubeadm init&lt;/code&gt; output.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Example
+$ sudo kubeadm join 10.1.1.1:6443 --token TOKEN_STRING \
+&amp;gt;     --discovery-token-ca-cert-hash sha256:LONG_HASH_VALUE
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Watch the status of the nodes on the cluster master.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ watch kubectl get nodes
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Once all the nodes are in the &amp;ldquo;Ready&amp;rdquo; state, you should have a working cluster.&lt;/p&gt;
+&lt;h3 id=&#34;verify-kubernetes&#34;&gt;Verify Kubernetes&lt;/h3&gt;
+&lt;p&gt;As a simple test of Kubernetes, run an Nginx pod (example from &lt;a href=&#34;https://itnext.io/building-a-kubernetes-cluster-on-raspberry-pi-and-low-end-equipment-part-1-a768359fbba3&#34;&gt;this article by Eduard Iskandarov&lt;/a&gt;). This is simpler than writing up and applying a manifest.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ kubectl create deployment nginx --image=nginx
+$ kubectl create service nodeport nginx --tcp=80:80
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Once the pod is ready, use &lt;code&gt;kubectl describe service&lt;/code&gt; to get the port number.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;$ kubectl describe service nginx
+Name:                     nginx
+Namespace:                default
+Labels:                   app=nginx
+Annotations:              &amp;lt;none&amp;gt;
+Selector:                 app=nginx
+Type:                     NodePort
+IP:                       10.110.64.240
+Port:                     80-80  80/TCP
+TargetPort:               80/TCP
+NodePort:                 80-80  32474/TCP
+Endpoints:                10.44.0.1:80
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   &amp;lt;none&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;You should now be able to send an HTTP request to that port on any node and get a response.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# Note: This is from a node *outside* the cluster, so uses the wlan0 address
+$ curl http://192.168.4.42:32474/
+&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+&amp;lt;title&amp;gt;Welcome to nginx!&amp;lt;/title&amp;gt;
+&amp;lt;style&amp;gt;
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+&amp;lt;/style&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;h1&amp;gt;Welcome to nginx!&amp;lt;/h1&amp;gt;
+&amp;lt;p&amp;gt;If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.&amp;lt;/p&amp;gt;
+
+&amp;lt;p&amp;gt;For online documentation and support please refer to
+&amp;lt;a href=&amp;quot;http://nginx.org/&amp;quot;&amp;gt;nginx.org&amp;lt;/a&amp;gt;.&amp;lt;br/&amp;gt;
+Commercial support is available at
+&amp;lt;a href=&amp;quot;http://nginx.com/&amp;quot;&amp;gt;nginx.com&amp;lt;/a&amp;gt;.&amp;lt;/p&amp;gt;
+
+&amp;lt;p&amp;gt;&amp;lt;em&amp;gt;Thank you for using nginx.&amp;lt;/em&amp;gt;&amp;lt;/p&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This should work for all nodes, including the master.&lt;/p&gt;
+&lt;p&gt;Congratulations, you now have your own Kubernetes cluster!&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
