@@ -6,10 +6,22 @@
     <description>Heath Harrelson&#39;s Blog (Posts)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 19 Jun 2020 23:13:07 -0700</lastBuildDate>
+    <lastBuildDate>Sat, 20 Jun 2020 22:22:58 -0700</lastBuildDate>
     
     <atom:link href="https://heathharrelson.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Opensource.com Raspberry Pi Kubernetes Cluster Article</title>
+      <link>https://heathharrelson.github.io/posts/opensource-com-raspberry-pi-kubernetes/</link>
+      <pubDate>Sat, 20 Jun 2020 22:22:58 -0700</pubDate>
+      
+      <guid>https://heathharrelson.github.io/posts/opensource-com-raspberry-pi-kubernetes/</guid>
+      <description>&lt;p&gt;As often happens, after spending several evenings getting &lt;a href=&#34;https://heathharrelson.github.io/posts/raspberry-pi-cluster-kubeadm/&#34;&gt;my Raspberry Pi 4 Kubernetes cluster&lt;/a&gt; working, I found this similar &lt;a href=&#34;https://opensource.com/article/20/6/kubernetes-raspberry-pi&#34;&gt;Opensource.com article on how to build a Raspberry Pi Kubernetes cluster&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The article is strikingly similar, although more of the setup is manual. The main difference is that the article uses Ubuntu for the Raspberry Pi&amp;rsquo;s operating system to take advantage of the availability of arm64 Docker images.&lt;/p&gt;
+&lt;p&gt;A lot of my effort was spent on automating machine setup and dealing with firewall issues, so finding this might or might not have saved me any time. Still, I&amp;rsquo;m glad to see more articles on the topic, which hopefully will make it easier for others to get started on their own clusters.&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://opensource.com/article/20/6/kubernetes-raspberry-pi&#34;&gt;Opensource.com: Build a Kubernetes cluster with the Raspberry Pi&lt;/a&gt;&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Turing Pi Kubernetes Cluster YouTube Series</title>
