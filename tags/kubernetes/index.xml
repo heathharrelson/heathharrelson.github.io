@@ -19,7 +19,7 @@
       <guid>https://heathharrelson.github.io/posts/jeff-geerling-turing-pi-series/</guid>
       <description>&lt;p&gt;While working on building my Raspberry Pi 4 Kubernetes cluster, I came across this &lt;a href=&#34;https://www.youtube.com/playlist?list=PL2_OBreMn7Frk57NLmLheAaSSpJLLL90G&#34;&gt;excellent YouTube series from Jeff Geerling on building a 7-node Kubernetes cluster&lt;/a&gt; using a &lt;a href=&#34;https://turingpi.com/&#34;&gt;Turing Pi&lt;/a&gt; and Raspberry Pi Compute Module 3+ boards.&lt;/p&gt;
 &lt;div style=&#34;position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;&#34;&gt;
-  &lt;iframe src=&#34;https://www.youtube.com/embed/PL2_OBreMn7Frk57NLmLheAaSSpJLLL90G&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&#34; allowfullscreen title=&#34;YouTube Video&#34;&gt;&lt;/iframe&gt;
+  &lt;iframe src=&#34;https://www.youtube.com/embed/kgVz4-SEhbE&#34; style=&#34;position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;&#34; allowfullscreen title=&#34;YouTube Video&#34;&gt;&lt;/iframe&gt;
 &lt;/div&gt;
 
 &lt;p&gt;The series is interesting even if you already know a bit about Kubernetes, particularly &lt;a href=&#34;https://www.youtube.com/watch?v=N4bfNefjBSw&#34;&gt;episode 3 (cluster setup)&lt;/a&gt; and &lt;a href=&#34;https://www.youtube.com/watch?v=IafVCHkJbtI&#34;&gt;episode 4 (deploying applications)&lt;/a&gt;.&lt;/p&gt;
