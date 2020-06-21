@@ -6,7 +6,7 @@
     <description>Heath Harrelson&#39;s Blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 20 Jun 2020 06:13:07 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 19 Jun 2020 23:13:07 -0700</lastBuildDate>
     
     <atom:link href="https://heathharrelson.github.io/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,7 +14,7 @@
     <item>
       <title>Turing Pi Kubernetes Cluster YouTube Series</title>
       <link>https://heathharrelson.github.io/posts/jeff-geerling-turing-pi-series/</link>
-      <pubDate>Sat, 20 Jun 2020 06:13:07 +0000</pubDate>
+      <pubDate>Fri, 19 Jun 2020 23:13:07 -0700</pubDate>
       
       <guid>https://heathharrelson.github.io/posts/jeff-geerling-turing-pi-series/</guid>
       <description>&lt;p&gt;While working on building my Raspberry Pi 4 Kubernetes cluster, I came across this &lt;a href=&#34;https://www.youtube.com/playlist?list=PL2_OBreMn7Frk57NLmLheAaSSpJLLL90G&#34;&gt;excellent YouTube series from Jeff Geerling on building a 7-node Kubernetes cluster&lt;/a&gt; using a &lt;a href=&#34;https://turingpi.com/&#34;&gt;Turing Pi&lt;/a&gt; and Raspberry Pi Compute Module 3+ boards.&lt;/p&gt;
@@ -34,7 +34,7 @@
     <item>
       <title>Building a Raspberry Pi Kubernetes Cluster with Kubeadm</title>
       <link>https://heathharrelson.github.io/posts/raspberry-pi-cluster-kubeadm/</link>
-      <pubDate>Sat, 20 Jun 2020 05:21:38 +0000</pubDate>
+      <pubDate>Fri, 19 Jun 2020 22:21:38 -0700</pubDate>
       
       <guid>https://heathharrelson.github.io/posts/raspberry-pi-cluster-kubeadm/</guid>
       <description>&lt;p&gt;This article describes how to build a personal &lt;a href=&#34;https://kubernetes.io/&#34;&gt;Kubernetes&lt;/a&gt; cluster using &lt;a href=&#34;https://www.raspberrypi.org/&#34;&gt;Raspberry Pi&lt;/a&gt; single-board computers and &lt;a href=&#34;https://kubernetes.io/docs/reference/setup-tools/kubeadm/kubeadm/&#34;&gt;kubeadm&lt;/a&gt;.&lt;/p&gt;
