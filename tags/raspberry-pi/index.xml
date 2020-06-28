@@ -6,10 +6,129 @@
     <description>Heath Harrelson&#39;s Blog (raspberry pi)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 20 Jun 2020 22:22:58 -0700</lastBuildDate>
+    <lastBuildDate>Sat, 27 Jun 2020 16:20:41 -0700</lastBuildDate>
     
     <atom:link href="https://heathharrelson.github.io/tags/raspberry-pi/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Testing the Kubernetes NFS Client Provisioner</title>
+      <link>https://heathharrelson.github.io/posts/nfs-client-provisioner/</link>
+      <pubDate>Sat, 27 Jun 2020 16:20:41 -0700</pubDate>
+      
+      <guid>https://heathharrelson.github.io/posts/nfs-client-provisioner/</guid>
+      <description>&lt;p&gt;While Kubernetes pods are ephemeral, most applications have &lt;em&gt;some&lt;/em&gt; state that we want to survive a restart, which means dealing with Kubernetes&amp;rsquo; &lt;a href=&#34;https://kubernetes.io/docs/concepts/storage/persistent-volumes/&#34;&gt;persistent volumes&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;For the bare-metal clusters I deal with at work, we manually create a subdirectory on an NFS share, then configure the relevant containers to mount the directory as a volume. Setting this up manually doesn&amp;rsquo;t feel particularly &amp;ldquo;cloud native,&amp;rdquo; so I was intrigued when I came across this &lt;a href=&#34;https://opensource.com/article/20/6/kubernetes-nfs-client-provisioning&#34;&gt;opensource.com article on creating dynamic persistent volumes using the NFS client provisioner&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The use case for the NFS client provisioner is essentially what I described above. If you have an existing NFS share, the NFS client provisioner can automatically create subdirectories on it to satisfy persistent volume claims. Sounds great! Let&amp;rsquo;s, try it, shall we?&lt;/p&gt;
+&lt;p&gt;Following the steps from the &lt;a href=&#34;https://opensource.com/article/20/6/kubernetes-nfs-client-provisioning&#34;&gt;opensource.com article&lt;/a&gt;, I cloned the &lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage&#34;&gt;external storage respository from GitHub&lt;/a&gt; to my Raspberry Pi cluster.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~
+$ git clone https://github.com/kubernetes-incubator/external-storage.git
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I applied the access control permissions.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl apply -f rbac.yaml
+serviceaccount/nfs-client-provisioner created
+clusterrole.rbac.authorization.k8s.io/nfs-client-provisioner-runner created
+clusterrolebinding.rbac.authorization.k8s.io/run-nfs-client-provisioner created
+role.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+rolebinding.rbac.authorization.k8s.io/leader-locking-nfs-client-provisioner created
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;I configured &lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage/blob/master/nfs-client/deploy/deployment-arm.yaml&#34;&gt;&lt;code&gt;deployment-arm.yaml&lt;/code&gt;&lt;/a&gt; for my NFS share, then deployed the NFS client provisioner by applying the manifest.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl apply -f deployment-arm.yaml
+deployment.apps/nfs-client-provisioner created
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl get pods
+NAME                                     READY   STATUS    RESTARTS   AGE
+nfs-client-provisioner-cbb9b57db-rqrz6   1/1     Running   0          10m
+nginx-f89759699-mz2tg                    1/1     Running   0          11d
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Finally, I created the &lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage/blob/master/nfs-client/deploy/class.yaml&#34;&gt;storage class&lt;/a&gt;, the &lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage/blob/master/nfs-client/deploy/test-claim.yaml&#34;&gt;volume claim&lt;/a&gt;, and the &lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage/blob/master/nfs-client/deploy/test-pod.yaml&#34;&gt;test pod&lt;/a&gt; by applying the related manifests.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl apply -f class.yaml
+storageclass.storage.k8s.io/managed-nfs-storage created
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl get storageclass
+NAME                  PROVISIONER   RECLAIMPOLICY   VOLUMEBINDINGMODE   ALLOWVOLUMEEXPANSION   AGE
+managed-nfs-storage   nfs-storage   Delete          Immediate           false                  25s
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl apply -f test-claim.yaml
+persistentvolumeclaim/test-claim created
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl apply -f test-pod.yaml
+pod/test-pod created
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;As expected, the NFS client provisioner created a directory for the persistent volume claim:&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls -l /cluster-data
+total 24
+drwxrwxrwx 2 nobody nogroup  4096 Jun 27 17:15 default-test-claim-pvc-7a0cafd4-5958-4671-aa59-6e5a9b1086e7
+drwx------ 2 root   root    16384 Jun 17 18:19 lost+found
+drwxr-xr-x 3 k8s    k8s      4096 Jun 21 18:37 manifests
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls -l /cluster-data/default-test-claim-pvc-7a0cafd4-5958-4671-aa59-6e5a9b1086e7/
+total 0
+-rw-r--r-- 1 nobody nogroup 0 Jun 27 17:15 SUCCESS
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;So it definitely works. However, there are two things that concern me, one minor and one major.&lt;/p&gt;
+&lt;p&gt;The minor issue is that if you aren&amp;rsquo;t careful with configuration, your data will be deleted when you delete the volume claim.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls /cluster-data
+default-test-claim-pvc-7a0cafd4-5958-4671-aa59-6e5a9b1086e7  lost+found  manifests
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ kubectl delete pvc test-claim
+persistentvolumeclaim &amp;quot;test-claim&amp;quot; deleted
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls /cluster-data
+lost+found  manifests
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;This probably isn&amp;rsquo;t a major problem, as long as you&amp;rsquo;re aware of it. You can also configure the storage class to archive the data when the PVC is deleted.&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ git diff class.yaml
+diff --git a/nfs-client/deploy/class.yaml b/nfs-client/deploy/class.yaml
+index 4d3b4805..ba774236 100644
+--- a/nfs-client/deploy/class.yaml
++++ b/nfs-client/deploy/class.yaml
+@@ -2,6 +2,6 @@ apiVersion: storage.k8s.io/v1
+ kind: StorageClass
+ metadata:
+   name: managed-nfs-storage
+-provisioner: fuseim.pri/ifs # or choose another name, must match deployment&#39;s env PROVISIONER_NAME&#39;
++provisioner: nfs-storage # or choose another name, must match deployment&#39;s env PROVISIONER_NAME&#39;
+ parameters:
+-  archiveOnDelete: &amp;quot;false&amp;quot;
++  archiveOnDelete: &amp;quot;true&amp;quot;
+$ kubectl delete pvc test-claim
+persistentvolumeclaim &amp;quot;test-claim&amp;quot; deleted
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls /cluster-data
+archived-default-test-claim-pvc-734bb4eb-e070-48dc-9071-a56c9ef71c6d  manifests
+lost+found
+HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls /cluster-data/archived-default-test-claim-pvc-734bb4eb-e070-48dc-9071-a56c9ef71c6d/
+SUCCESS
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;The more concerning issue is that the NFS client provisioner creates directories that are world writable (😱😱😱).&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;HypriotOS/armv7: k8s@k8smaster in ~/external-storage/nfs-client/deploy
+$ ls -l /cluster-data
+total 24
+# NOOOOOOOOOOOOOOO!
+drwxrwxrwx 2 nobody nogroup  4096 Jun 27 20:49 default-test-claim-pvc-f8129e20-d910-42b2-9d01-78464fa6aee0
+drwx------ 2 root   root    16384 Jun 17 18:19 lost+found
+drwxr-xr-x 3 k8s    k8s      4096 Jun 21 18:37 manifests
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Even worse, the &lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage/blob/master/nfs-client/cmd/nfs-client-provisioner/provisioner.go#L69&#34;&gt;directory permissions are hardcoded&lt;/a&gt; in the source.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-go&#34; data-lang=&#34;go&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;func&lt;/span&gt; (&lt;span style=&#34;color:#a6e22e&#34;&gt;p&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;nfsProvisioner&lt;/span&gt;) &lt;span style=&#34;color:#a6e22e&#34;&gt;Provision&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;options&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;controller&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;VolumeOptions&lt;/span&gt;) (&lt;span style=&#34;color:#f92672&#34;&gt;*&lt;/span&gt;&lt;span style=&#34;color:#a6e22e&#34;&gt;v1&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;PersistentVolume&lt;/span&gt;, &lt;span style=&#34;color:#66d9ef&#34;&gt;error&lt;/span&gt;) {
+  &lt;span style=&#34;color:#75715e&#34;&gt;// ...
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;
+	&lt;span style=&#34;color:#a6e22e&#34;&gt;fullPath&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;filepath&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Join&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;mountPath&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;pvName&lt;/span&gt;)
+	&lt;span style=&#34;color:#a6e22e&#34;&gt;glog&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;V&lt;/span&gt;(&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;).&lt;span style=&#34;color:#a6e22e&#34;&gt;Infof&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;creating path %s&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;fullPath&lt;/span&gt;)
+	&lt;span style=&#34;color:#66d9ef&#34;&gt;if&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;:=&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;os&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;MkdirAll&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;fullPath&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0777&lt;/span&gt;); &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;!=&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt; {
+		&lt;span style=&#34;color:#66d9ef&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#66d9ef&#34;&gt;nil&lt;/span&gt;, &lt;span style=&#34;color:#a6e22e&#34;&gt;errors&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;New&lt;/span&gt;(&lt;span style=&#34;color:#e6db74&#34;&gt;&amp;#34;unable to create directory to provision new pv: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#f92672&#34;&gt;+&lt;/span&gt; &lt;span style=&#34;color:#a6e22e&#34;&gt;err&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Error&lt;/span&gt;())
+	}
+	&lt;span style=&#34;color:#a6e22e&#34;&gt;os&lt;/span&gt;.&lt;span style=&#34;color:#a6e22e&#34;&gt;Chmod&lt;/span&gt;(&lt;span style=&#34;color:#a6e22e&#34;&gt;fullPath&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;0777&lt;/span&gt;)
+
+	&lt;span style=&#34;color:#75715e&#34;&gt;// ...
+&lt;/span&gt;&lt;span style=&#34;color:#75715e&#34;&gt;&lt;/span&gt;}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;It&amp;rsquo;s possible that I&amp;rsquo;m missing something, but this seems not great. I could definitely update the configuration to run as an unprivileged user and create directories with safer permissions, but I prefer not to maintain this kind of low-level cluster infrastructure. I suspect we&amp;rsquo;ll stick with manual volume configuration, at least until our IT organization offers a more dynamic storage solution.&lt;/p&gt;
+&lt;h2 id=&#34;links&#34;&gt;Links&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://opensource.com/article/20/6/kubernetes-nfs-client-provisioning&#34;&gt;Opensource.com: Provision Kubernetes NFS clients on a Raspberry Pi homelab&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/kubernetes-incubator/external-storage&#34;&gt;GitHub: Kubernetes incubator external-storage repo&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</description>
+    </item>
     
     <item>
       <title>Opensource.com Raspberry Pi Kubernetes Cluster Article</title>
