@@ -6,10 +6,19 @@
     <description>Heath Harrelson&#39;s Blog (Posts)</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 27 Jun 2020 16:20:41 -0700</lastBuildDate>
+    <lastBuildDate>Mon, 06 Jul 2020 21:07:10 -0700</lastBuildDate>
     
     <atom:link href="https://heathharrelson.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Crontab Guru</title>
+      <link>https://heathharrelson.github.io/posts/crontab-guru/</link>
+      <pubDate>Mon, 06 Jul 2020 21:07:10 -0700</pubDate>
+      
+      <guid>https://heathharrelson.github.io/posts/crontab-guru/</guid>
+      <description>&lt;p&gt;If you&amp;rsquo;re like me, you can never remember the exact syntax for a UNIX &lt;a href=&#34;https://en.wikipedia.org/wiki/Cron&#34;&gt;cron&lt;/a&gt; schedule. &lt;a href=&#34;https://crontab.guru/&#34;&gt;Crontab Guru&lt;/a&gt; is an excellent reference, with &lt;a href=&#34;https://crontab.guru/examples.html&#34;&gt;many examples&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
     
     <item>
       <title>Testing the Kubernetes NFS Client Provisioner</title>

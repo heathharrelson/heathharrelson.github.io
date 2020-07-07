@@ -3,17 +3,37 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://heathharrelson.github.io/</loc>
-    <lastmod>2020-06-27T16:20:41-07:00</lastmod>
+    <loc>https://heathharrelson.github.io/tags/cron/</loc>
+    <lastmod>2020-07-06T21:07:10-07:00</lastmod>
   </url>
   
   <url>
-    <loc>https://heathharrelson.github.io/tags/kubernetes/</loc>
-    <lastmod>2020-06-27T16:20:41-07:00</lastmod>
+    <loc>https://heathharrelson.github.io/posts/crontab-guru/</loc>
+    <lastmod>2020-07-06T21:07:10-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://heathharrelson.github.io/</loc>
+    <lastmod>2020-07-06T21:07:10-07:00</lastmod>
   </url>
   
   <url>
     <loc>https://heathharrelson.github.io/posts/</loc>
+    <lastmod>2020-07-06T21:07:10-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://heathharrelson.github.io/tags/</loc>
+    <lastmod>2020-07-06T21:07:10-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://heathharrelson.github.io/tags/unix/</loc>
+    <lastmod>2020-07-06T21:07:10-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://heathharrelson.github.io/tags/kubernetes/</loc>
     <lastmod>2020-06-27T16:20:41-07:00</lastmod>
   </url>
   
@@ -24,11 +44,6 @@
   
   <url>
     <loc>https://heathharrelson.github.io/tags/storage/</loc>
-    <lastmod>2020-06-27T16:20:41-07:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://heathharrelson.github.io/tags/</loc>
     <lastmod>2020-06-27T16:20:41-07:00</lastmod>
   </url>
   
